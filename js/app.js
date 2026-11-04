@@ -4,15 +4,26 @@
  */
 
 //Deklarasikan endpoint API 
+const API_URL = 'api/mahasiswa.php';
 
 // 1. Seleksi Elemen DOM Utama
 const tabelBody = document.getElementById('tabel-body-mahasiswa');
 const inputSearch = document.getElementById('input-search');
 const totalBadge = document.getElementById('total-mahasiswa-badge');
+const totalInfo = document.getElementById('total-mahasiswa-info');
+const formTambah = document.getElementByID('form-tambah-mahasiswa');
+const alertBox = document.getElementById('alert-box');
 
 
 // Helper: Menampilkan Pesan Notifikasi Dinamis
 function showAlert(message, type = 'success') {
+    if (!alertBox) return;
+    alertBox.textContent = message;
+    alertBox.className = 'alert-box alert-${type}';
+    alertBox.style.display = 'block';
+    setTimeout(() => {
+        alertBox.style.display = 'none';   
+    }, 4000);
    
 }
 
@@ -20,15 +31,32 @@ function showAlert(message, type = 'success') {
 async function loadMahasiswa(keyword = '') {
 
     // tampilkan indikator loading
-    tabelBody.innerHTML = ``;
+    tabelBody.innerHTML = `
+        <tr>
+        <td colspan="8" style="text-aliggn: center; padding:
+        20px; color: var(--text-muted); ">
+        Memuat data dsari server...
+        </td>
+        <tr/>
+    `;
 
     try {
 
         //Percobaan 6-1 Langkah 4 susun url request
+        const url = keyword ?
+        '${API_URL}?search=${encodeURICOmponent(keyword)}' : API_URL;
         
         //Percobaan 6-1 Langkah 4 kirim request
-        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('HTTP Error:${response.status}');
+       
         //Percobaan 6-1 Langkah 4 kirim ekstrak json 
+         const result = await response.json();
+        if (result.status === 'success') {
+            renderTable(result.data, keyword);
+            } else {
+                showAlert(result.message, 'danger');
+            }
 
       
     } catch (error) {
@@ -152,14 +180,25 @@ if (formEdit) {
 if (formTambah) {
     formTambah.addEventListener('submit', async function (event) {
         // Percobaan 6-2 Langkah 3 
+        event.preventDefault();
 
         const dataMahasiswa = {
             // Percobaan 6-2 Langkah 4
-
+            npm: document. getElementById('npm').value.tirm(),
+            nama: document.getElementById('nama').value.trim(),
+            program_studi: document.getElementById('program_studi').value,
+            angkatan: parseInt(document.getElementById('angkatan').value,10),
+            email: document.getElementById('Email').value.trim()
         };
 
         try {
             // Percobaan 6-2 Langkah 5
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {'content-Type': 'application/json' },
+                body: JSON.stringify(dataMahasiswa)
+            });
+            const result = await response.json();
             
             if (response.ok && result.status === 'success') {
                 showAlert(result.message, 'success');
